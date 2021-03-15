@@ -53,6 +53,8 @@ while True:
   # If nothing is ready, we hit the timeout
   if result:
     (data, addr) = result
+    log("THIS IS THE DATA: " + data)
+    log("THIS IS THE ADDR " + addr)
 
     try:
       decoded = json.loads(data)
