@@ -55,8 +55,12 @@ while True:
 
   if result:
     (data, addr) = result
+    log("THIS IS THE DATA RECV: " + data)
+    log("THIS IS THE ADDR RECV" + str(addr))
+
     try:
       decoded = json.loads(data)
+      log("THIS IS DECODED DATA SEND: " + str(decoded))
 
       # If there is an ack, send next packet
       if decoded['ack'] == SEQUENCE:
@@ -66,9 +70,9 @@ while True:
         if (not send_next_packet()):
           break
     except (ValueError, KeyError, TypeError):
-      log("[recv corrupt packet]")
+      log("[recv corrupt packet] SEND SIDE")
   else:
-    log("[error] timeout")
+    log("[error] timeout SEND SIDE")
     sys.exit(-1)
 
 sock.sendto(json.dumps({"eof": True, "data": "", "sequence": SEQUENCE, "ack": False}), dest)

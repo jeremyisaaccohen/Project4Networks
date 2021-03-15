@@ -53,12 +53,12 @@ while True:
   # If nothing is ready, we hit the timeout
   if result:
     (data, addr) = result
-    log("THIS IS THE DATA: " + data)
-    log("THIS IS THE ADDR " + str(addr))
+    log("THIS IS THE DATA RECV: " + data)
+    log("THIS IS THE ADDR RECV" + str(addr))
 
     try:
       decoded = json.loads(data)
-      log("THIS IS DECODED DATA: " + str(decoded))
+      log("THIS IS DECODED DATA RECV: " + str(decoded))
 
       #Check If Packet is Good with Checksum
       if checkSumPacket(decoded):
@@ -84,8 +84,8 @@ while True:
           log("[ACK SENT] This is the ack: " + msg)
 
     except (ValueError, KeyError, TypeError) as e:
-      log("[recv corrupt packet]")
+      log("[recv corrupt packet] RECV SIDE")
       raise e
   else:
-    log("[error] timeout")
+    log("[error] timeout RECV SIDE")
     sys.exit(-1)
