@@ -10,9 +10,23 @@ import time
 import datetime
 import select
 import json
+import hashlib
 
 def log(string):
   sys.stderr.write(datetime.datetime.now().strftime("%H:%M:%S.%f") + " " + string + "\n")
+
+
+#Check if the packets checksum is the same as our current checksum
+def checkSumPacket(packet):
+  packetChecksum = packet['checksum']
+  data = ''
+  for val in packet:
+    data += (str(val))
+  currentChecksum = hashlib.md5(data).hexdigest()
+  return packetChecksum == currentChecksum
+
+
+
 
 MSG_SIZE = 1500
 TIMEOUT = 30
@@ -43,23 +57,28 @@ while True:
     try:
       decoded = json.loads(data)
 
-      # If the EOF flag is set, exit
-      if (decoded['eof']):
-        log("[completed]")
-        sys.exit(0)
+      #Check If Packet is Good with Checksum
+      if checkSumPacket(decoded):
 
-      # If there is data, we accept it and print it out
-      if (decoded['data']):
-        # If we receive data, we assume it's in-order
-        # You will need to do much more here
-        log("[recv data] " + str(decoded['sequence']) + " (" + str(len(decoded['data'])) + ") ACCEPTED (in-order)")
-        sys.stdout.write(decoded['data'])
+        # If the EOF flag is set, exit
+        if (decoded['eof']):
+          log("[completed]")
+          sys.exit(0)
 
-      # Send back an ack to the sender
-      msg = json.dumps({"ack": decoded['sequence'] + len(decoded['data'])})
-      log("ABOUT TO SEND " + msg)
-      if sock.sendto(msg, addr) < len(msg):
-        log("[error] unable to fully send packet")
+        # If there is data, we accept it and print it out
+        if (decoded['data']):
+          # If we receive data, we assume it's in-order
+          # You will need to do much more here
+          log("[recv data] " + str(decoded['sequence']) + " (" + str(len(decoded['data'])) + ") ACCEPTED (in-order)")
+          sys.stdout.write(decoded['data'])
+
+        # Send back an ack to the sender
+        msg = json.dumps({"ack": decoded['sequence'] + len(decoded['data'])})
+        log("ABOUT TO SEND " + msg)
+        if sock.sendto(msg, addr) < len(msg):
+          log("[error] unable to fully send packet")
+        else:
+          log("[ACK SENT] This is the ack: " + msg)
 
     except (ValueError, KeyError, TypeError) as e:
       log("[recv corrupt packet]")
