@@ -56,6 +56,7 @@ while True:
 
     try:
       decoded = json.loads(data)
+      log("THIS IS DECODED DATA: " + str(decoded))
 
       #Check If Packet is Good with Checksum
       if checkSumPacket(decoded):
