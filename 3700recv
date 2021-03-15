@@ -54,7 +54,7 @@ while True:
   if result:
     (data, addr) = result
     log("THIS IS THE DATA: " + data)
-    log("THIS IS THE ADDR " + addr)
+    log("THIS IS THE ADDR " + str(addr))
 
     try:
       decoded = json.loads(data)
