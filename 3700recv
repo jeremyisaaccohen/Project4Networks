@@ -60,28 +60,26 @@ while True:
       decoded = json.loads(data)
       log("THIS IS DECODED DATA RECV: " + str(decoded))
 
-      #Check If Packet is Good with Checksum
-      if checkSumPacket(decoded):
+      # If the EOF flag is set, exit
+      if (decoded['eof']):
+        log("[completed]")
+        sys.exit(0)
 
-        # If the EOF flag is set, exit
-        if (decoded['eof']):
-          log("[completed]")
-          sys.exit(0)
+      # If there is data, we accept it and print it out
+      if (decoded['data']):
+        # If we receive data, we assume it's in-order
+        # You will need to do much more here
+        log("[recv data] " + str(decoded['sequence']) + " (" + str(len(decoded['data'])) + ") ACCEPTED (in-order)")
+        sys.stdout.write(decoded['data'])
 
-        # If there is data, we accept it and print it out
-        if (decoded['data']):
-          # If we receive data, we assume it's in-order
-          # You will need to do much more here
-          log("[recv data] " + str(decoded['sequence']) + " (" + str(len(decoded['data'])) + ") ACCEPTED (in-order)")
-          sys.stdout.write(decoded['data'])
+      # Send back an ack to the sender
+      msg = json.dumps({"ack": decoded['sequence'] + len(decoded['data'])})
+      log("ABOUT TO SEND " + msg)
+      if sock.sendto(msg, addr) < len(msg):
+        log("[error] unable to fully send packet")
+      else:
+        log("[ACK SENT] This is the ack: " + msg)
 
-        # Send back an ack to the sender
-        msg = json.dumps({"ack": decoded['sequence'] + len(decoded['data'])})
-        log("ABOUT TO SEND " + msg)
-        if sock.sendto(msg, addr) < len(msg):
-          log("[error] unable to fully send packet")
-        else:
-          log("[ACK SENT] This is the ack: " + msg)
 
     except (ValueError, KeyError, TypeError) as e:
       log("[recv corrupt packet] RECV SIDE")

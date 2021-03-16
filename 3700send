@@ -12,7 +12,8 @@ import select
 import json
 
 MSG_SIZE = 1500
-DATA_SIZE = 1000
+#DATA_SIZE = 1000
+DATA_SIZE = 250
 TIMEOUT = 30
 SEQUENCE = 0
 
