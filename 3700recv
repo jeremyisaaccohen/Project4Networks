@@ -10,22 +10,16 @@ import time
 import datetime
 import select
 import json
-import hashlib
 
 def log(string):
-  sys.stderr.write(datetime.datetime.now().strftime("%H:%M:%S.%f") + " " + string + "\n")
+  sys.stderr.write("\t\t\t\t\t"+datetime.datetime.now().strftime("%H:%M:%S.%f") + " " + string + "\n")
 
 
-#Check if the packets checksum is the same as our current checksum
-def checkSumPacket(packet):
-  packetChecksum = packet['checksum']
-  data = ''
-  for val in packet:
-    data += (str(val))
-  currentChecksum = hashlib.md5(data).hexdigest()
-  return packetChecksum == currentChecksum
-
-
+def perform_exit():
+  for key in buffer:
+    sys.stdout.write(buffer[key]['data'])
+  log("[completed]")
+  sys.exit(0)
 
 
 MSG_SIZE = 1500
@@ -46,6 +40,12 @@ sock.settimeout(TIMEOUT)
 UDP_PORT = sock.getsockname()[1]
 log("[bound] " + str(UDP_PORT))
 
+
+#Set a buffer to hold our packets
+buffer = {}  # 250: packet, 500: packet
+
+expectedSequence = 0
+
 # Now listen for packets
 while True:
   result = sock.recvfrom(MSG_SIZE)
@@ -57,23 +57,33 @@ while True:
     log("THIS IS THE ADDR RECV" + str(addr))
 
     try:
+
       decoded = json.loads(data)
       log("THIS IS DECODED DATA RECV: " + str(decoded))
 
-      # If the EOF flag is set, exit
-      if (decoded['eof']):
-        log("[completed]")
-        sys.exit(0)
+      # If the EOF flag is set and we are at the expected sequence then exit
+      if (decoded['eof']) and decoded['sequence'] == expectedSequence:
+        perform_exit()
+
+      #If our buffer does not have the current sequence data add it to the buffer
+      #and check that the packet has data
+      if not buffer.has_key(decoded['sequence']) and decoded['data']:
+        buffer[decoded['sequence']] = decoded
+
+      if decoded['sequence'] == expectedSequence:
+        expectedSequence += len(decoded['data'])
+
+
 
       # If there is data, we accept it and print it out
-      if (decoded['data']):
+      #if (decoded['data']):net
         # If we receive data, we assume it's in-order
         # You will need to do much more here
-        log("[recv data] " + str(decoded['sequence']) + " (" + str(len(decoded['data'])) + ") ACCEPTED (in-order)")
-        sys.stdout.write(decoded['data'])
+      #  log("[recv data] " + str(decoded['sequence']) + " (" + str(len(decoded['data'])) + ") ACCEPTED (in-order)")
+      #  sys.stdout.write(decoded['data'])
 
       # Send back an ack to the sender
-      msg = json.dumps({"ack": decoded['sequence'] + len(decoded['data'])})
+      msg = json.dumps({"ack": decoded['sequence'] + len(decoded['data']), 'timeSent': time.time()})
       log("ABOUT TO SEND " + msg)
       if sock.sendto(msg, addr) < len(msg):
         log("[error] unable to fully send packet")

@@ -23,12 +23,17 @@ UDP_IP = IP_PORT[0:IP_PORT.find(":")]
 UDP_PORT = int(IP_PORT[IP_PORT.find(":")+1:])
 dest = (UDP_IP, UDP_PORT)
 
+buffer = {}
+
+
 # Set up the socket
 sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 sock.settimeout(TIMEOUT)
 
 def log(string):
   sys.stderr.write(datetime.datetime.now().strftime("%H:%M:%S.%f") + " " + string + "\n")
+
+
 
 def send_next_packet():
   global SEQUENCE
@@ -49,6 +54,7 @@ def send_next_packet():
 # Send first packet
 send_next_packet()
 
+
 # Now read in data, send packets
 while True:
   log("ABOUT TO SLEEP")
@@ -62,6 +68,10 @@ while True:
     try:
       decoded = json.loads(data)
       log("THIS IS DECODED DATA SEND: " + str(decoded))
+
+      #Add the received acknowledgement to our buffer
+      if not buffer.has_key(decoded['ack']):
+        buffer[decoded['ack']] = decoded
 
       # If there is an ack, send next packet
       if decoded['ack'] == SEQUENCE:
