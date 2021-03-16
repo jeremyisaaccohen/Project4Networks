@@ -1,0 +1,5 @@
+
+
+scp 3700send /Users/collinchase/Desktop/transport-environment
+
+scp 3700recv /Users/collinchase/Desktop/transport-environment
